@@ -5,15 +5,12 @@
 #include "hardware/gpio.h"
 #include "hardware/pio.h"
 #include "hardware/i2c.h"
-#include "hardware/adc.h"
 
 #include "WS2812.pio.h"
 #include "drivers/logging/logging.h"
 #include "drivers/leds.h"
 #include "drivers/accelerometer.h"
-#include "drivers/microphone.h"
 
-#include "arm_math.h"  
 
 #include <cstdarg>
 #include <cstdio>
