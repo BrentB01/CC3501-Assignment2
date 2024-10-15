@@ -35,7 +35,7 @@
 uint8_t length = 1;
 uint8_t data[6]; // Array to store accelerometer X, Y, Z data (assuming 6 bytes)
 
-int16_t button_last_state = 0;  // Store last button state
+int16_t button_last_state = 0;  // Store last button state 
 
 // Function prototypes
 void check_button();
