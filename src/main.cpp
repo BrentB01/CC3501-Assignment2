@@ -30,23 +30,68 @@
 #define RESULT_REGISTER 0x00       // Result register address
 #define CONFIG_REGISTER 0x01       // Configuration register address
 
+#define TEMP_SDA 6
+#define TEMP_SCL 7
+#define TEMP_ALERT 23
+#define TEMP_I2C_SLAVE 0x48
 
+extern uint8_t reg;
+extern uint16_t value;
+extern i2c_inst_t* i2c;
+uint8_t data[2];
 
+void write_temp_register(i2c_inst_t* i2c, uint8_t reg, uint16_t value) {
+    uint8_t data[3];
+    data[0] = reg; // Register address
+    data[1] = (value >> 8) & 0xFF; // MSB
+    data[2] = value & 0xFF; // LSB
+    int result = i2c_write_blocking(i2c, TEMP_I2C_SLAVE, data, 3, false);
+    if (result == PICO_ERROR_GENERIC) {
+        printf("I2C Write Error!\n");
+    }
+}
+
+// Function to read from a register
+uint16_t read_temp_register(i2c_inst_t* i2c, uint8_t reg) {
+    uint8_t data[2] = {0};
+    int result = i2c_write_blocking(i2c, TEMP_I2C_SLAVE, &reg, 1, true); // Send register address
+    if (result == PICO_ERROR_GENERIC) {
+        printf("I2C Write Error during read!\n");
+    }
+    result = i2c_read_blocking(i2c, TEMP_I2C_SLAVE, data, 2, false); // Read data
+    if (result == PICO_ERROR_GENERIC) {
+        printf("I2C Read Error!\n");
+    }
+    return (data[0] << 8) | data[1]; // Combine MSB and LSB
+}
+
+float convert_to_celsius(uint16_t raw_value) {
+    // TMP75 outputs a 12-bit value; shift to right-align the 12-bit temperature
+    int16_t temp = (int16_t)(raw_value >> 4);
+    // Convert to Celsius (0.0625°C per bit)
+    return temp * 0.0625f;
+}
+ 
+ void TEMP_init(){
+ // Initialize I2C (I2C0 in this case)
+    i2c_init(i2c0, 100000); // 100 kHz
+    gpio_set_function(TEMP_SDA, GPIO_FUNC_I2C); // Set GPIO 12 as SDA
+    gpio_set_function(TEMP_SCL, GPIO_FUNC_I2C); // Set GPIO 13 as SCL
+ }
 
 int main() {
     stdio_init_all(); // Initialize standard I/O   
-    ALS_init(); 
-    sleep_ms(200); // Delay to ensure initialization is complete
+    TEMP_init();
+    data[0] = CONFIG_REGISTER; // Register address
+    data[1] = 0x00;
+    i2c_write_blocking(i2c0, TEMP_I2C_SLAVE, data, 2, false);
+    read_temp_register(i2c0,RESULT_REGISTER);
 
     while (true) {
-        uint16_t result = read_register(i2c0, RESULT_REGISTER); // Read the result register
-        // The output is in a 16-bit format; extract lux value from it
-        uint8_t exponent = (result >> 12) & 0x0F; // Exponent
-        uint16_t mantissa = result & 0x0FFF; // Mantissa
-        float lux = (0.01 * (1 << exponent) * mantissa); // Calculate lux
-
-        printf("Ambient Light: %.2f lux\n", lux); // Print the light level
-        sleep_ms(1000); // Delay before the next read
+        uint16_t raw_temp = read_temp_register(i2c0, RESULT_REGISTER); // Read raw temperature value
+        float temperature = convert_to_celsius(raw_temp); // Convert raw value to Celsius
+        printf("Temperature: %.2f°C\n", temperature); // Print temperature to terminal
+        sleep_ms(1000); // Wait for 1 second before reading again
     }
 
     return 0;
