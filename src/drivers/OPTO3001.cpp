@@ -43,7 +43,7 @@ uint16_t read_register(i2c_inst_t* i2c, uint8_t reg) {
     i2c_init(i2c0, 100000); // 100 kHz
     gpio_set_function(12, GPIO_FUNC_I2C); // Set GPIO 12 as SDA
     gpio_set_function(13, GPIO_FUNC_I2C); // Set GPIO 13 as SCL
-     write_register(i2c0, CONFIG_REGISTER, 0b1100110000000000); //Configures the register 
+    write_register(i2c0, CONFIG_REGISTER, 0b1100110000000000); //Configures the register 
 }
 
 
