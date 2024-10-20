@@ -46,6 +46,16 @@ uint16_t read_register(i2c_inst_t* i2c, uint8_t reg) {
     write_register(i2c0, CONFIG_REGISTER, 0b1100110000000000); //Configures the register 
 }
 
+float ALS_read(){
+     uint16_t result = read_register(i2c0, RESULT_REGISTER); // Read the result register
+        // The output is in a 16-bit format; extract lux value from it
+        uint8_t exponent = (result >> 12) & 0x0F; // Exponent
+        uint16_t mantissa = result & 0x0FFF; // Mantissa
+        float lux = (0.01 * (1 << exponent) * mantissa); // Calculate lux
+
+        printf("Ambient Light: %.2f lux\n", lux); // Print the light level
+        return lux; 
+}
 
 // This code will continually monitor the ALS
 /* Consider chnaging in future 

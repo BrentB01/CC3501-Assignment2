@@ -1,4 +1,4 @@
-#include "leds.h"
+#include "drivers/leds.h"
 #include "pico/stdlib.h"
 #include "hardware/gpio.h"
 #include "hardware/pio.h"
@@ -15,8 +15,8 @@
 #include "drivers/logging/logging.h"
 #include <cstdint>
 
-#define LED_PIN 14
-#define NUM_LEDS 12
+#define LED_PIN 18
+#define NUM_LEDS 1
 
 
 
@@ -26,7 +26,7 @@
 // turn off
 //Declare function
 
-uint32_t led_data[12]; // Array for 12 LEDs 
+uint32_t led_data[1]; // Array for 12 LEDs 
 
 void leds_init(){
 stdio_init_all();

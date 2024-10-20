@@ -8,3 +8,4 @@
 void ALS_init();
 void write_register(i2c_inst_t* i2c, uint8_t reg, uint16_t value);
 uint16_t read_register(i2c_inst_t* i2c, uint8_t reg);
+float ALS_read();
