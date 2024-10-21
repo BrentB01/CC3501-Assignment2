@@ -38,6 +38,7 @@ if(CrossCompiling)
         src/drivers/OPTO3001.cpp
         src/drivers/ir_driver.cpp
         src/drivers/AS2.cpp
+        
     )
     target_include_directories(labs
         PUBLIC 

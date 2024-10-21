@@ -46,8 +46,7 @@
 // Buttons
 #define SW1 2
 
-// IR Emmitter 
-#define IR_Emmit 14
+
 
 // Bluetooth 
 #define BLT_RST 16 
@@ -167,7 +166,7 @@ int main() {
             }
         }
 
-        sleep_ms(100); // Wait for 100ms before checking again
+        //sleep_ms(100); // Wait for 100ms before checking again
         // Check if data is available to read
         if (uart_is_readable(UART_ID)) {
             char ch = uart_getc(UART_ID); // Read a single character
@@ -231,12 +230,14 @@ int main() {
         }
         if (IR_SENSOR_FLAG = true)
         {
-            gpio_get(IR_SENSOR);
-            if (IR_SENSOR == 1)
+            bool ir_check = gpio_get(IR_SENSOR);
+            if (ir_check == 1)
             {
+                gpio_put(LED_PIN, 1);
                char buffer[50];
                snprintf(buffer, sizeof(buffer), "MOTION DETECTED\n");
                uart_puts(UART_ID, buffer); 
+
             }
             
         }
