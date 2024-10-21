@@ -8,7 +8,7 @@
 
 #include "drivers/TMP75AIDR.cpp"
 #include "drivers/TMP75AIDR.h"
-#include "drivers/leds.h"
+//#include "drivers/leds.h"
 #include "drivers/logging/logging.h"
 #include "drivers/OPTO3001.h"
 #include "drivers/ir_driver.h"
@@ -35,7 +35,7 @@
 #define CONFIG_REGISTER 0x01       // Configuration register address
 
 //LED Definitions 
-#define LED_PIN 29
+#define LED_PIN 18
 #define NUM_LEDS 1
 
 //IR Sensor
@@ -111,9 +111,6 @@ int main() {
             gpio_put(LED_PIN, true);
         } else {
             gpio_put(LED_PIN, false);
-        }
-        {
-            gpio_put(LED_PIN,false);
         }
         
     }
