@@ -32,12 +32,7 @@ if(CrossCompiling)
     target_sources(labs 
         PUBLIC
         src/main.cpp
-        src/drivers/logging/logging.cpp
-        src/drivers/leds.cpp
-        src/drivers/accelerometer.cpp
-        src/drivers/OPTO3001.cpp
-        src/drivers/ir_driver.cpp
-        src/drivers/AS2.cpp
+        
         
     )
     target_include_directories(labs
@@ -83,17 +78,7 @@ else()
     target_sources(labs 
         PUBLIC
         src/main.cpp
-        src/drivers/logging/logging.cpp
-        src/drivers/leds.cpp
-        src/drivers/accelerometer.cpp
-        src/drivers/microphone.cpp
-        src/drivers/OPTO3001.cpp
-        src/drivers/AS@.cpp
-        tests/mocks/pico/stdlib.cpp
-        tests/mocks/pico/time.cpp
-        tests/mocks/hardware/gpio.cpp
-        tests/mocks/hardware/pio.cpp
-        tests/mocks/ws2812.cpp
+        
         
     )
     target_include_directories(labs
