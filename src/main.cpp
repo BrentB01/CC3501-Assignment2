@@ -69,7 +69,6 @@ int main() {
     // Initialize ALS 
     ALS_init();
 
-<<<<<<< Updated upstream
     // Initilize LED
     gpio_init(LED_PIN);
     gpio_set_dir(LED_PIN,GPIO_OUT);
@@ -81,10 +80,6 @@ int main() {
 
 
     
-=======
-    gpio_init(LED_PIN);
-    gpio_set_dir(LED_PIN, GPIO_OUT);
->>>>>>> Stashed changes
     
     // Setup PWM for IR transmission
     setup_pwm(IR_PIN, CARRIER_FREQUENCY, DUTY_CYCLE_PERCENT);
@@ -117,14 +112,10 @@ int main() {
         } else {
             gpio_put(LED_PIN, false);
         }
-<<<<<<< Updated upstream
-        else
         {
             gpio_put(LED_PIN,false);
         }
         
-=======
->>>>>>> Stashed changes
     }
 
     return 0;
