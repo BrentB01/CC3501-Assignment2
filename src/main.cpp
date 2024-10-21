@@ -103,14 +103,6 @@ int main() {
     absolute_time_t last_instruction_time = get_absolute_time();
     const int instruction_interval_ms = 15000; // 15 seconds
 
-    // Configure LED
-    // Initialise PIO0 to control the LED chain
-    uint pio_program_offset = pio_add_program(pio0, &ws2812_program);
-    ws2812_program_init(pio0, 0, pio_program_offset, LED_PIN, 800000, false);
-    uint32_t led_data [1] = {0};  // Initialize all LEDs to off
-    
-    
-
     // Main loop to continuously read and display the temperature
     while (true) {
         
