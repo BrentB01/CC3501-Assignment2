@@ -53,7 +53,7 @@ float ALS_read(){
         uint16_t mantissa = result & 0x0FFF; // Mantissa
         float lux = (0.01 * (1 << exponent) * mantissa); // Calculate lux
 
-        printf("Ambient Light: %.2f lux\n", lux); // Print the light level
+        //printf("Ambient Light: %.2f lux\n", lux); // Print the light level
         return lux; 
 }
 

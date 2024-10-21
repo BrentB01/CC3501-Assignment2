@@ -17,6 +17,8 @@
 #include "hardware/gpio.h"
 #include "hardware/pio.h"
 #include "WS2812.pio.h"
+#include "hardware/uart.h"
+
 
 // IR Driver Definitions
 #define IR_PIN 14  // GPIO for IR transmission
@@ -61,6 +63,34 @@
 
 using namespace std;
 
+
+void Instructions() {
+    char buffer1[50];
+    snprintf(buffer1, sizeof(buffer1), "IOT INSTRUCTIONS: \n");
+    uart_puts(UART_ID, buffer1); // Send data over Bluetooth
+
+    char buffer2[150];
+    sniprintf(buffer2,sizeof(buffer2), "Temperature Instructions: \n Type 'A' for temp\n Type 'B' for aircon automode\n Type 'C' for aircon on\n Type 'D' for aircon off\n");
+    uart_puts(UART_ID,buffer2);
+    //Press 'L' for light level \n 
+
+    char buffer3[150];
+    sniprintf(buffer3,sizeof(buffer3), "Light Instructions: \n Type 'E' for Lux\n Type 'F' for AutoIllumination \n Type 'G' for light on \n Type 'H' for light off \n");
+    uart_puts(UART_ID,buffer3);
+
+    char buffer4[150];
+    sniprintf(buffer4,sizeof(buffer4), "Motion Detections Instructions: \n Type 'M' to enable motion detection\n Type 'N' to diable motion detection\n");
+    uart_puts(UART_ID,buffer4);
+}
+
+  // Function to initialize the Bluetooth UART
+    void bluetooth_init() {
+    uart_init(UART_ID, BAUD_RATE); // Initialize UART
+    gpio_set_function(BLT_TX, GPIO_FUNC_UART); // Set GPIO for TX
+    gpio_set_function(BLT_RX, GPIO_FUNC_UART); // Set GPIO for RX
+    uart_set_format(UART_ID, DATA_BITS, STOP_BITS, PARITY); // Set UART format
+}
+
 int main() {
     stdio_init_all(); // Initialize standard I/O for serial communication
 
@@ -82,6 +112,13 @@ int main() {
     gpio_init(SW1);
     gpio_set_dir(SW1, GPIO_IN);
 
+    // Initialize Bluetooth UART
+    bluetooth_init();
+
+    // Send data over Bluetooth
+    Instructions();
+  
+
     // Variables to track button and LED state
     int sw1_press_count = 0; // Tracks how many times SW1 has been pressed
     bool sw1_pressed = false; // Tracks if the SW1 button was pressed (for edge detection)
@@ -95,7 +132,7 @@ int main() {
         float temperature = convert_to_celsius(raw_temp);
         
         // Print the temperature to the terminal
-        printf("Temperature: %.2f°C\n", temperature);
+        //printf("Temperature: %.2f°C\n", temperature);
         
         // Check the temperature conditions
         if (temperature > 29.0) {
@@ -145,7 +182,48 @@ int main() {
         }
 
         sleep_ms(100); // Wait for 100ms before checking again
+        // Check if data is available to read
+        if (uart_is_readable(UART_ID)) {
+            char ch = uart_getc(UART_ID); // Read a single character
+
+            // Compare the received character to 'A'
+            if (ch == 'A') {
+                uint16_t raw_temp = read_temp_register(); // Read the raw temperature value
+                float temperature = convert_to_celsius(raw_temp); // Convert the raw value to Celsius
+
+                // Create a buffer to hold the formatted string
+                char buffer[50];
+                // Format the temperature into the buffer
+                snprintf(buffer, sizeof(buffer), "Temperature: %.2f°C\n", temperature);
+                // Send the formatted temperature over Bluetooth
+                uart_puts(UART_ID, buffer);
+            } else if (ch == 'F')
+            {
+              sw1_press_count = 0; //Light auto mode 
+            } else if (ch == 'G')
+            {
+                sw1_press_count = 1; //Light on 
+                gpio_put(LED_PIN, true);
+            }else if (ch == 'H')
+            {
+                sw1_press_count = 2; //Light off
+                gpio_put(LED_PIN, false);  // Turn LED on
+            }else if (ch=='E')
+            {
+               float lux = ALS_read();
+               
+            }
+            
+        
+        }
     }
 
     return 0;
 }
+
+
+
+
+
+
+
