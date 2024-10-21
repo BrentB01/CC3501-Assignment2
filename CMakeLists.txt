@@ -36,6 +36,7 @@ if(CrossCompiling)
         src/drivers/leds.cpp
         src/drivers/accelerometer.cpp
         src/drivers/OPTO3001.cpp
+        src/drivers/ir_driver.cpp
     )
     target_include_directories(labs
         PUBLIC 

@@ -3,17 +3,25 @@
 #include <cstdarg>
 #include <cstdio>
 #include <cstdint>
+#include "pico/stdlib.h"
+
 
 #include "drivers/TMP75AIDR.cpp"
 #include "drivers/TMP75AIDR.h"
 #include "drivers/leds.h"
 #include "drivers/logging/logging.h"
 #include "drivers/OPTO3001.h"
+#include "drivers/ir_driver.h"
 
 #include "hardware/i2c.h"
 #include "hardware/gpio.h"
 #include "hardware/pio.h"
 #include "WS2812.pio.h"
+
+// IR Driver Definitions
+#define IR_PIN 14  // GPIO for IR transmission
+#define CARRIER_FREQUENCY 38000
+#define DUTY_CYCLE_PERCENT 33
 
 //Temp Sensor Definitions 
 #define TEMP_SDA 6
@@ -53,16 +61,15 @@ using namespace std;
 
 
 int main() {
-    
-    
     stdio_init_all(); // Initialize standard I/O for serial communication
 
     // Initialize I2C for the TMP75 sensor
     TEMP_init();      
-    
+
     // Initialize ALS 
     ALS_init();
 
+<<<<<<< Updated upstream
     // Initilize LED
     gpio_init(LED_PIN);
     gpio_set_dir(LED_PIN,GPIO_OUT);
@@ -74,30 +81,50 @@ int main() {
 
 
     
+=======
+    gpio_init(LED_PIN);
+    gpio_set_dir(LED_PIN, GPIO_OUT);
+>>>>>>> Stashed changes
     
+    // Setup PWM for IR transmission
+    setup_pwm(IR_PIN, CARRIER_FREQUENCY, DUTY_CYCLE_PERCENT);
+    sleep_ms(1000);  // Wait before sending signal
    
-    
-
     // Main loop to continuously read and display the temperature
     while (true) {
         // Read the raw temperature value from the TMP75 sensor
         uint16_t raw_temp = read_temp_register();
+
         // Convert the raw temperature value to Celsius
         float temperature = convert_to_celsius(raw_temp);
+        
         // Print the temperature to the terminal
         printf("Temperature: %.2f°C\n", temperature);
+        
+        // Check the temperature conditions
+        if (temperature > 29.0) {
+            send_ir_signal(IR_PIN, ir_data_on, sizeof(ir_data_on) / sizeof(ir_data_on[0]));
+        } else if (temperature < 27.0) {
+            send_ir_signal(IR_PIN, ir_data_off, sizeof(ir_data_off) / sizeof(ir_data_off[0]));
+        }
+
         // Wait for 1 second before reading again
         sleep_ms(100);
+        
         float LUX = ALS_read();
-        if (LUX<= 100)
-        {
-            gpio_put(LED_PIN,true);
+        if (LUX <= 100) {
+            gpio_put(LED_PIN, true);
+        } else {
+            gpio_put(LED_PIN, false);
         }
+<<<<<<< Updated upstream
         else
         {
             gpio_put(LED_PIN,false);
         }
         
+=======
+>>>>>>> Stashed changes
     }
 
     return 0;
