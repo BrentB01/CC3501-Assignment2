@@ -33,6 +33,23 @@
 //IR Sensor
 #define IR_SENSOR 25
 
+//IR Emmitter 
+#define IR_Emmit 14
+
+//Bluetooth 
+#define BLT_RST 16 
+#define BLT_CS 15 
+#define BLT_INT 17 
+#define BLT_TX 5
+#define BLT_RX 4
+#define UART_ID uart1               // Use UART1
+#define BAUD_RATE 115200            // Ensure this matches the Raspberry Pi
+#define DATA_BITS 8
+#define STOP_BITS 1
+#define PARITY UART_PARITY_NONE
+
+using namespace std;
+
 
 
 int main() {
@@ -46,9 +63,16 @@ int main() {
     // Initialize ALS 
     ALS_init();
 
-
+    // Initilize LED
     gpio_init(LED_PIN);
     gpio_set_dir(LED_PIN,GPIO_OUT);
+
+    // Initililize IR LED
+    gpio_init(IR_Emmit);
+    gpio_set_dir(IR_Emmit,GPIO_OUT);
+    gpio_put(IR_Emmit,true);
+
+
     
     
    
@@ -73,9 +97,6 @@ int main() {
         {
             gpio_put(LED_PIN,false);
         }
-        
-        
-        
         
     }
 
