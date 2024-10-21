@@ -45,6 +45,7 @@
 
 // Buttons
 #define SW1 2
+#define SW2 3
 
 
 
@@ -85,6 +86,10 @@ int main() {
     gpio_init(SW1);
     gpio_set_dir(SW1, GPIO_IN);
 
+     // Initialize button SW1
+    gpio_init(SW2);
+    gpio_set_dir(SW2, GPIO_IN);
+
     // Initialize Bluetooth UART
     bluetooth_init();
 
@@ -94,9 +99,11 @@ int main() {
     IR_init();
   
 
-    // Variables to track button and LED state
+    // Variables to track button and state
     int sw1_press_count = 0; // Tracks how many times SW1 has been pressed
     bool sw1_pressed = false; // Tracks if the SW1 button was pressed (for edge detection)
+    int sw2_press_count = 0; // Tracks how many times SW2 has been pressed
+    bool sw2_pressed = false; // Tracks if the SW2 button was pressed (for edge detection)
     
     // Timer variable for instructions
     absolute_time_t last_instruction_time = get_absolute_time();
@@ -117,13 +124,15 @@ int main() {
         
         // Print the temperature to the terminal
         //printf("Temperature: %.2f°C\n", temperature);
-        
+
+/*        
         // Check the temperature conditions
         if (temperature > 29.0) {
             send_ir_signal(IR_PIN, ir_data_on, sizeof(ir_data_on) / sizeof(ir_data_on[0]));
         } else if (temperature < 27.0) {
             send_ir_signal(IR_PIN, ir_data_off, sizeof(ir_data_off) / sizeof(ir_data_off[0]));
         }
+*/
 
         // Check if SW1 is pressed (active low, so gpio_get(SW1) == 0 when pressed)
         if (gpio_get(SW1) == 0 && !sw1_pressed) {
@@ -165,6 +174,45 @@ int main() {
                 printf("Ambient Light: %.2f LUX, LED turned OFF (Sufficient Light).\n", LUX);
             }
         }
+
+                // Check if SW2 is pressed (active low, so gpio_get(SW2) == 0 when pressed)
+        if (gpio_get(SW2) == 0 && !sw2_pressed) {
+            // Button press detected (rising edge)
+            sw2_pressed = true;
+            sw2_press_count = (sw2_press_count + 1) % 3; // Increment press count and wrap around every 3 presses
+
+            // Handle behavior based on press count
+            if (sw2_press_count == 1) {
+                // First press: Send IR ON signal
+                send_ir_signal(IR_PIN, ir_data_on, sizeof(ir_data_on) / sizeof(ir_data_on[0]));
+                printf("SW2: Aircon turned ON.\n");
+
+            } else if (sw2_press_count == 2) {
+                // Second press: Send IR OFF signal
+                send_ir_signal(IR_PIN, ir_data_on, sizeof(ir_data_on) / sizeof(ir_data_on[0]));
+                printf("SW2: Aircon turned OFF.\n");
+
+            } else if (sw2_press_count == 0) {
+                // Third press: Revert to automatic mode
+                printf("SW2: Automatic Mode Activated\n");
+            }
+        }
+
+        // Reset button state when released
+        if (gpio_get(SW2) != 0) {
+            sw2_pressed = false;
+        }
+
+        // Automatic mode (sw2_press_count == 0) controls behavior based on ambient light sensor or other logic
+        if (sw2_press_count == 0) {
+            if (temperature > 29.0) {
+                send_ir_signal(IR_PIN, ir_data_on, sizeof(ir_data_on) / sizeof(ir_data_on[0]));
+            } else if (temperature < 27.0) {
+                send_ir_signal(IR_PIN, ir_data_off, sizeof(ir_data_off) / sizeof(ir_data_off[0]));
+            }
+            
+        }
+
 
         //sleep_ms(100); // Wait for 100ms before checking again
         // Check if data is available to read
