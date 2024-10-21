@@ -38,7 +38,7 @@
 #define CONFIG_REGISTER 0x01       // Configuration register address
 
 // LED Definitions 
-#define LED_PIN 18
+#define LED_PIN 29
 #define NUM_LEDS 1
 
 // IR Sensor
@@ -66,24 +66,7 @@ using namespace std;
 
 bool IR_SENSOR_FLAG = false; 
 
-void leds_init() {
-    // Initialize the PIO for WS2812 control
-    PIO pio = pio0;
-    uint32_t pio_program_offset = pio_add_program(pio, &ws2812_program);
-    ws2812_program_init(pio, 0, pio_program_offset, LED_PIN, 800000, false);
-}
 
-void leds_set(uint8_t red, uint8_t green, uint8_t blue) {
-    // Set the color of the first LED
-    led_data[0] = (red << 24) | (green << 16) | (blue << 8); // Set the color data
-}
-
-void leds_update() {
-    // Send data to all LEDs
-    for (int i = 0; i < NUM_LEDS; i++) {
-        pio_sm_put_blocking(pio0, 0, led_data[i]);
-    }
-}
 
 int main() {
 
@@ -91,9 +74,6 @@ int main() {
     stdio_init_all(); // Initialize standard I/O for serial communication
     TEMP_init();      
     ALS_init();
-    leds_init();
-    leds_set(1,250,250,250);
-    leds_update();
 
     // Setup PWM for IR transmission
     setup_pwm(IR_PIN, CARRIER_FREQUENCY, DUTY_CYCLE_PERCENT);
@@ -119,9 +99,18 @@ int main() {
     // Variables to track button and LED state
     int sw1_press_count = 0; // Tracks how many times SW1 has been pressed
     bool sw1_pressed = false; // Tracks if the SW1 button was pressed (for edge detection)
+    
+    // Timer variable for instructions
+    absolute_time_t last_instruction_time = get_absolute_time();
+    const int instruction_interval_ms = 15000; // 15 seconds
 
     // Main loop to continuously read and display the temperature
     while (true) {
+        
+        if (absolute_time_diff_us(last_instruction_time, get_absolute_time()) >= instruction_interval_ms*1000) {
+            Instructions();
+            last_instruction_time = get_absolute_time(); // Update the last instruction time
+        }
         // Read the raw temperature value from the TMP75 sensor
         uint16_t raw_temp = read_temp_register();
 
