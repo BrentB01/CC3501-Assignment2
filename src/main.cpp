@@ -3,7 +3,6 @@
 #include <cstdarg>
 #include <cstdio>
 #include <cstdint>
-#include "pico/stdlib.h"
 
 
 #include "drivers/TMP75AIDR.cpp"
@@ -38,7 +37,7 @@
 #define CONFIG_REGISTER 0x01       // Configuration register address
 
 // LED Definitions 
-#define LED_PIN 29
+#define LED_PIN 18
 #define NUM_LEDS 1
 
 // IR Sensor
@@ -104,6 +103,14 @@ int main() {
     absolute_time_t last_instruction_time = get_absolute_time();
     const int instruction_interval_ms = 15000; // 15 seconds
 
+    // Configure LED
+    // Initialise PIO0 to control the LED chain
+    uint pio_program_offset = pio_add_program(pio0, &ws2812_program);
+    ws2812_program_init(pio0, 0, pio_program_offset, LED_PIN, 800000, false);
+    uint32_t led_data [1] = {0};  // Initialize all LEDs to off
+    
+    
+
     // Main loop to continuously read and display the temperature
     while (true) {
         
@@ -159,9 +166,10 @@ int main() {
         if (sw1_press_count == 0) {
             float LUX = ALS_read();
             if (LUX <= 100) {
-                gpio_put(LED_PIN, true);  // Turn LED on if ambient light is low
+                gpio_put(LED_PIN, true); // Turn LED on if ambient light is sufficient
                 printf("Ambient Light: %.2f LUX, LED turned ON (Low Light).\n", LUX);
             } else {
+                // Turn LED off
                 gpio_put(LED_PIN, false); // Turn LED off if ambient light is sufficient
                 printf("Ambient Light: %.2f LUX, LED turned OFF (Sufficient Light).\n", LUX);
             }
@@ -232,7 +240,7 @@ int main() {
         if (IR_SENSOR_FLAG = true)
         {
             gpio_get(IR_SENSOR);
-            if (IR_SENSOR ==1)
+            if (IR_SENSOR == 1)
             {
                char buffer[50];
                snprintf(buffer, sizeof(buffer), "MOTION DETECTED\n");
@@ -245,10 +253,3 @@ int main() {
 
     return 0;
 }
-
-
-
-
-
-
-
