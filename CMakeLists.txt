@@ -37,6 +37,7 @@ if(CrossCompiling)
         src/drivers/accelerometer.cpp
         src/drivers/OPTO3001.cpp
         src/drivers/ir_driver.cpp
+        src/drivers/AS2.cpp
     )
     target_include_directories(labs
         PUBLIC 
@@ -86,6 +87,7 @@ else()
         src/drivers/accelerometer.cpp
         src/drivers/microphone.cpp
         src/drivers/OPTO3001.cpp
+        src/drivers/AS@.cpp
         tests/mocks/pico/stdlib.cpp
         tests/mocks/pico/time.cpp
         tests/mocks/hardware/gpio.cpp

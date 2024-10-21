@@ -12,6 +12,7 @@
 #include "drivers/logging/logging.h"
 #include "drivers/OPTO3001.h"
 #include "drivers/ir_driver.h"
+#include "drivers/AS2.h"
 
 #include "hardware/i2c.h"
 #include "hardware/gpio.h"
@@ -37,7 +38,7 @@
 #define CONFIG_REGISTER 0x01       // Configuration register address
 
 // LED Definitions 
-#define LED_PIN 29
+#define LED_PIN 18
 #define NUM_LEDS 1
 
 // IR Sensor
@@ -55,50 +56,44 @@
 #define BLT_INT 17 
 #define BLT_TX 5
 #define BLT_RX 4
-#define UART_ID uart1               // Use UART1
-#define BAUD_RATE 115200            // Ensure this matches the Raspberry Pi
+#define UART_ID uart1             
+#define BAUD_RATE 115200            
 #define DATA_BITS 8
 #define STOP_BITS 1
 #define PARITY UART_PARITY_NONE
 
 using namespace std;
 
+bool IR_SENSOR_FLAG = false; 
 
-void Instructions() {
-    char buffer1[50];
-    snprintf(buffer1, sizeof(buffer1), "IOT INSTRUCTIONS: \n");
-    uart_puts(UART_ID, buffer1); // Send data over Bluetooth
-
-    char buffer2[150];
-    sniprintf(buffer2,sizeof(buffer2), "Temperature Instructions: \n Type 'A' for temp\n Type 'B' for aircon automode\n Type 'C' for aircon on\n Type 'D' for aircon off\n");
-    uart_puts(UART_ID,buffer2);
-    //Press 'L' for light level \n 
-
-    char buffer3[150];
-    sniprintf(buffer3,sizeof(buffer3), "Light Instructions: \n Type 'E' for Lux\n Type 'F' for AutoIllumination \n Type 'G' for light on \n Type 'H' for light off \n");
-    uart_puts(UART_ID,buffer3);
-
-    char buffer4[150];
-    sniprintf(buffer4,sizeof(buffer4), "Motion Detections Instructions: \n Type 'M' to enable motion detection\n Type 'N' to diable motion detection\n");
-    uart_puts(UART_ID,buffer4);
+void leds_init() {
+    // Initialize the PIO for WS2812 control
+    PIO pio = pio0;
+    uint32_t pio_program_offset = pio_add_program(pio, &ws2812_program);
+    ws2812_program_init(pio, 0, pio_program_offset, LED_PIN, 800000, false);
 }
 
-  // Function to initialize the Bluetooth UART
-    void bluetooth_init() {
-    uart_init(UART_ID, BAUD_RATE); // Initialize UART
-    gpio_set_function(BLT_TX, GPIO_FUNC_UART); // Set GPIO for TX
-    gpio_set_function(BLT_RX, GPIO_FUNC_UART); // Set GPIO for RX
-    uart_set_format(UART_ID, DATA_BITS, STOP_BITS, PARITY); // Set UART format
+void leds_set(uint8_t red, uint8_t green, uint8_t blue) {
+    // Set the color of the first LED
+    led_data[0] = (red << 24) | (green << 16) | (blue << 8); // Set the color data
+}
+
+void leds_update() {
+    // Send data to all LEDs
+    for (int i = 0; i < NUM_LEDS; i++) {
+        pio_sm_put_blocking(pio0, 0, led_data[i]);
+    }
 }
 
 int main() {
-    stdio_init_all(); // Initialize standard I/O for serial communication
 
-    // Initialize I2C for the TMP75 sensor
+// Initilizations
+    stdio_init_all(); // Initialize standard I/O for serial communication
     TEMP_init();      
-    
-    // Initialize ALS 
     ALS_init();
+    leds_init();
+    leds_set(1,250,250,250);
+    leds_update();
 
     // Setup PWM for IR transmission
     setup_pwm(IR_PIN, CARRIER_FREQUENCY, DUTY_CYCLE_PERCENT);
@@ -117,6 +112,8 @@ int main() {
 
     // Send data over Bluetooth
     Instructions();
+
+    IR_init();
   
 
     // Variables to track button and LED state
@@ -186,18 +183,36 @@ int main() {
         if (uart_is_readable(UART_ID)) {
             char ch = uart_getc(UART_ID); // Read a single character
 
-            // Compare the received character to 'A'
-            if (ch == 'A') {
+           
+            if (ch == 'A') //Temp read
+            {
                 uint16_t raw_temp = read_temp_register(); // Read the raw temperature value
                 float temperature = convert_to_celsius(raw_temp); // Convert the raw value to Celsius
-
-                // Create a buffer to hold the formatted string
                 char buffer[50];
-                // Format the temperature into the buffer
-                snprintf(buffer, sizeof(buffer), "Temperature: %.2f°C\n", temperature);
-                // Send the formatted temperature over Bluetooth
+                snprintf(buffer, sizeof(buffer), "TEMP: %.2fC\n", temperature);
                 uart_puts(UART_ID, buffer);
-            } else if (ch == 'F')
+               
+            }
+            // else if (ch=='B') //Aircon to auto
+            // {
+                
+            // }
+            // else if (ch == "C")//Aircon on
+            // {
+
+            // }
+            // else if (ch == "D")//Aircon off
+            // {
+            //     /* code */
+            // }
+            else if (ch=='E')
+            {
+               float lux = ALS_read();
+               char buffer[50];
+               snprintf(buffer, sizeof(buffer), "LUX: %.2flx\n", lux);
+               uart_puts(UART_ID, buffer);    
+            }
+            else if (ch == 'F')
             {
               sw1_press_count = 0; //Light auto mode 
             } else if (ch == 'G')
@@ -208,14 +223,35 @@ int main() {
             {
                 sw1_press_count = 2; //Light off
                 gpio_put(LED_PIN, false);  // Turn LED on
-            }else if (ch=='E')
+            }else if (ch == 'M'){
+               char buffer[50];
+               snprintf(buffer, sizeof(buffer), "MOTION SENSOR ACTIVATED\n");
+               uart_puts(UART_ID, buffer); 
+               IR_SENSOR_FLAG = true;
+            }else if (ch == 'N')
             {
-               float lux = ALS_read();
-               
+               char buffer[50];
+               snprintf(buffer, sizeof(buffer), "MOTION SENSOR DEACTIVATION\n");
+               uart_puts(UART_ID, buffer); 
+               IR_SENSOR_FLAG = false;
+            }else{
+               char buffer[50];
+               snprintf(buffer, sizeof(buffer), "INVALID CHARACTER\n");
+               uart_puts(UART_ID, buffer); 
+            }
+        }
+        if (IR_SENSOR_FLAG = true)
+        {
+            gpio_get(IR_SENSOR);
+            if (IR_SENSOR ==1)
+            {
+               char buffer[50];
+               snprintf(buffer, sizeof(buffer), "MOTION DETECTED\n");
+               uart_puts(UART_ID, buffer); 
             }
             
-        
         }
+        
     }
 
     return 0;
