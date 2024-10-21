@@ -23,31 +23,28 @@
 #define CARRIER_FREQUENCY 38000
 #define DUTY_CYCLE_PERCENT 33
 
-// Temp Sensor Definitions 
+//Temp Sensor Definitions 
 #define TEMP_SDA 6
 #define TEMP_SCL 7
 #define TEMP_I2C_SLAVE 0x48 // TMP75 I2C address
 #define RESULT_REGISTER 0x00 // Temperature register address
 
-// Ambient Light Sensor
+//Ambient Light Sensor
 #define ALS_I2C_ADDRESS 0x44 // 7-bit I2C address (0b1000100)
 #define RESULT_REGISTER 0x00       // Result register address
 #define CONFIG_REGISTER 0x01       // Configuration register address
 
-// LED Definitions 
+//LED Definitions 
 #define LED_PIN 29
 #define NUM_LEDS 1
 
-// IR Sensor
+//IR Sensor
 #define IR_SENSOR 25
 
-// Buttons
-#define SW1 2
-
-// IR Emmitter 
+//IR Emmitter 
 #define IR_Emmit 14
 
-// Bluetooth 
+//Bluetooth 
 #define BLT_RST 16 
 #define BLT_CS 15 
 #define BLT_INT 17 
@@ -61,31 +58,33 @@
 
 using namespace std;
 
+
+
 int main() {
     stdio_init_all(); // Initialize standard I/O for serial communication
 
     // Initialize I2C for the TMP75 sensor
     TEMP_init();      
-    
+
     // Initialize ALS 
     ALS_init();
-
-    // Setup PWM for IR transmission
-    setup_pwm(IR_PIN, CARRIER_FREQUENCY, DUTY_CYCLE_PERCENT);
-    sleep_ms(1000);  // Wait before sending signal
 
     // Initilize LED
     gpio_init(LED_PIN);
     gpio_set_dir(LED_PIN,GPIO_OUT);
 
-    // Initialize button SW1
-    gpio_init(SW1);
-    gpio_set_dir(SW1, GPIO_IN);
+    // Initililize IR LED
+    gpio_init(IR_Emmit);
+    gpio_set_dir(IR_Emmit,GPIO_OUT);
+    gpio_put(IR_Emmit,true);
 
-    // Variables to track button and LED state
-    int sw1_press_count = 0; // Tracks how many times SW1 has been pressed
-    bool sw1_pressed = false; // Tracks if the SW1 button was pressed (for edge detection)
 
+    
+    
+    // Setup PWM for IR transmission
+    setup_pwm(IR_PIN, CARRIER_FREQUENCY, DUTY_CYCLE_PERCENT);
+    sleep_ms(1000);  // Wait before sending signal
+   
     // Main loop to continuously read and display the temperature
     while (true) {
         // Read the raw temperature value from the TMP75 sensor
@@ -104,47 +103,19 @@ int main() {
             send_ir_signal(IR_PIN, ir_data_off, sizeof(ir_data_off) / sizeof(ir_data_off[0]));
         }
 
-        // Check if SW1 is pressed (active low, so gpio_get(SW1) == 0 when pressed)
-        if (gpio_get(SW1) == 0 && !sw1_pressed) {
-            // Button press detected (rising edge)
-            sw1_pressed = true;
-            sw1_press_count = (sw1_press_count + 1) % 3; // Increment press count and wrap around every 4 presses
-
-            // Handle behavior based on press count
-            if (sw1_press_count == 1) {
-                // First press: Manual mode, LED on
-                gpio_put(LED_PIN, true);
-                printf("Manual Mode Activated: LED turned ON.\n");
-
-            } else if (sw1_press_count == 2) {
-                // Second press: Manual mode, LED off
-                gpio_put(LED_PIN, false);
-                printf("Manual Mode Activated: LED turned OFF.\n");
-
-            }  else if (sw1_press_count == 0) {
-                // Fourth press: Revert to automatic lighting control mode
-                printf("Automatic Mode Activated\n");
-            }
+        // Wait for 1 second before reading again
+        sleep_ms(100);
+        
+        float LUX = ALS_read();
+        if (LUX <= 100) {
+            gpio_put(LED_PIN, true);
+        } else {
+            gpio_put(LED_PIN, false);
         }
-
-        // Reset button state when released
-        if (gpio_get(SW1) != 0) {
-            sw1_pressed = false;
+        {
+            gpio_put(LED_PIN,false);
         }
-
-        // Automatic mode (sw1_press_count == 0) controls LED with ambient light sensor
-        if (sw1_press_count == 0) {
-            float LUX = ALS_read();
-            if (LUX <= 100) {
-                gpio_put(LED_PIN, true);  // Turn LED on if ambient light is low
-                printf("Ambient Light: %.2f LUX, LED turned ON (Low Light).\n", LUX);
-            } else {
-                gpio_put(LED_PIN, false); // Turn LED off if ambient light is sufficient
-                printf("Ambient Light: %.2f LUX, LED turned OFF (Sufficient Light).\n", LUX);
-            }
-        }
-
-        sleep_ms(100); // Wait for 100ms before checking again
+        
     }
 
     return 0;
