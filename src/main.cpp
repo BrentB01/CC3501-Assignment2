@@ -228,7 +228,7 @@ int main() {
                uart_puts(UART_ID, buffer); 
             }
         }
-        if (IR_SENSOR_FLAG = true)
+        if (IR_SENSOR_FLAG == true)
         {
             bool ir_check = gpio_get(IR_SENSOR);
             if (ir_check == 1)
