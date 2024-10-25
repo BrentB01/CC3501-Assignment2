@@ -11,9 +11,9 @@ This is the codebase for Group 7's prototype IoT Smart board.
 | `src/drivers`              | Hardware drivers                                        |
 | `src/drivers/WS2812/`      | Low level driver for WS2812 using PIO                   |
 | `src/drivers/logging/`     | Example basic log driver                                |
-| 'src/drivers/ir_driver/'   | IR Raw data and handling for IR Emitter                 |
-| 'src/drivers/OPTO3001/'    | Data handling and function definitions relating to the ALS |
-| 'src/drivers/TMP75AIDR/'   | Data handling and function definitions relating to the temperature sensor |
+| `src/drivers/ir_driver/`   | IR Raw data and handling for IR Emitter                 |
+| `src/drivers/OPTO3001/`    | Data handling and function definitions relating to the ALS |
+| `src/drivers/TMP75AIDR/`   | Data handling and function definitions relating to the temperature sensor |
 | `tests`                    | Code to support the native build for testing            |
 | `tests/mocks/`             | Mock implementations of Pico SDK to enable native build |
 
