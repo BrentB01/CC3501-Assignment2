@@ -1,9 +1,6 @@
-# Starter code for CC3501 labs
+# Group7 Prototype IoT Smart board
 
-This is intended as a starting point for CC3501 students to build their own code for labs. The repository contains:
-
-1. Preconfigured `CMakeLists.txt` that supports building embedded code for the target as well as native Windows code for a test harness.
-2. Very minimal example for how to interact with WS2812 addressable LEDs (plus minimal example of native mock for testing purposes).
+This is the codebase for Group 7's prototype IoT Smart board. 
 
 # Code organisation 
 
@@ -14,6 +11,9 @@ This is intended as a starting point for CC3501 students to build their own code
 | `src/drivers`              | Hardware drivers                                        |
 | `src/drivers/WS2812/`      | Low level driver for WS2812 using PIO                   |
 | `src/drivers/logging/`     | Example basic log driver                                |
+| 'src/drivers/ir_driver/'   | IR Raw data and handling for IR Emitter                 |
+| 'src/drivers/OPTO3001/'    | Data handling and function definitions relating to the ALS |
+| 'src/drivers/TMP75AIDR/'   | Data handling and function definitions relating to the temperature sensor |
 | `tests`                    | Code to support the native build for testing            |
 | `tests/mocks/`             | Mock implementations of Pico SDK to enable native build |
 
